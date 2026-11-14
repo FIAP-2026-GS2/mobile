@@ -1,56 +1,123 @@
-# Welcome to your Expo app 👋
+<div align="center">
+  <img src="./assets/images/icon.png" alt="Logo Smart Sampa Zeladoria" width="110" />
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# Smart Sampa Zeladoria
 
-## Get started
+Câmeras que já existem na cidade cuidando de postes, ruas e semáforos.
 
-1. Install dependencies
+</div>
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## Sobre o projeto
 
-   ```bash
-   npx expo start
-   ```
+O Smart Sampa já conecta dezenas de milhares de câmeras em São Paulo, hoje voltadas para a
+segurança. Muitas delas, por acaso ou conveniência, enxergam postes, vias e semáforos. Esta
+solução (Global Solution FIAP 2026/2, tema **CitizenTech**) reaproveita essas câmeras para a
+**zeladoria urbana**:
 
-In the output, you'll find options to open the app in a
+1. O gestor cria uma **agenda de captura** semanal ou mensal para cada câmera.
+2. A imagem capturada passa por **visão computacional** e um **LLM** descreve o problema encontrado.
+3. O gestor revisa a detecção. Se for real, ela vira uma **ocorrência** para a equipe da subprefeitura.
+4. O **cidadão** também relata problemas e acompanha o atendimento pela linha do tempo.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+> Projeto acadêmico. Não é um aplicativo oficial da Prefeitura de São Paulo.
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Funcionalidades
 
-## Get a fresh project
+| Perfil  | Telas                                                                                                           |
+| ------- | --------------------------------------------------------------------------------------------------------------- |
+| Todos   | Login, Cadastro, Início, Ocorrências (lista com filtros e paginação), Detalhe da ocorrência, Conta, Sobre o app |
+| Cidadão | Relatar problema, editar e excluir o próprio relato enquanto estiver aberto                                     |
+| Gestor  | Painel, Detecções da IA (confirmar ou descartar), Agendas de captura (CRUD), mudar status da ocorrência         |
 
-When you're ready, run:
+- **Autenticação** com JWT da API Java: cadastro, login, sessão salva no `expo-secure-store`, logout e rotas protegidas por papel (`Stack.Protected` / `Tabs.Protected`).
+- **CRUDs pela API**: ocorrências (cidadão) e agendas de captura (gestor).
+- **Feedback visual**: loaders, mensagens de erro em português, "Tentar novamente", puxar para atualizar.
+- **Idempotência**: todo `POST` envia `Idempotency-Key`, então um toque duplo não cria registro repetido.
+- **Tema** escuro (padrão, como o Smart Sampa Cidadão) e claro, com fonte Montserrat.
+- **Sobre o app** mostra o hash do commit da build publicada.
 
-```bash
-npm run reset-project
+## Tecnologias
+
+- React Native + Expo SDK 58, TypeScript
+- Expo Router (navegação por arquivos, rotas protegidas)
+- Axios + TanStack Query (camada de acesso à API e cache)
+- expo-secure-store (token JWT)
+- @expo-google-fonts/montserrat, @expo/vector-icons
+- ESLint (`eslint-config-expo`) + Prettier
+
+## Estrutura
+
+```
+src/
+  app/            rotas (cada arquivo é uma tela)
+    (app)/        área logada
+      (tabs)/     abas: início, ocorrências, detecções, agendas, conta
+  api/            cliente Axios, erros e chamadas por recurso
+  components/     componentes de interface (ui/, issues/, monitoring/)
+  context/        AuthProvider
+  hooks/          queries e mutations do TanStack Query
+  storage/        armazenamento seguro de preferências e token
+  theme/          cores, tipografia, espaçamentos e ThemeProvider
+  types/          tipos do domínio (espelham o modelo relacional)
+  utils/          formatação, rótulos e validação
+docs/API.md       contrato esperado da API Java
+mock-api/         API simulada só para desenvolvimento
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+## Como executar
 
-### Other setup steps
+Pré-requisitos: Node.js 20+ e o app **Expo Go** no celular (ou um emulador Android).
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+git clone https://github.com/FIAP-2026-GS2/mobile.git
+```
 
-## Learn more
+```bash
+cd mobile && npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Apontando para a API Java publicada:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+EXPO_PUBLIC_API_URL=https://<url-da-api> npx expo start
+```
 
-## Join the community
+Para desenvolver sem a API Java, use a API simulada (dados em memória):
 
-Join our community of developers creating universal apps.
+```bash
+npm run mock-api
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+EXPO_PUBLIC_API_URL=http://<ip-do-computador>:8080 npx expo start
+```
+
+Usuários de teste da API simulada: `cidadao@teste.com` e `gestor@teste.com`, senha `senha123`.
+
+Verificações de qualidade:
+
+```bash
+npm run lint
+npm run typecheck
+npm run format:check
+```
+
+## Publicação
+
+O app é distribuído pelo **Firebase App Distribution** (APK gerado com EAS Build). A tela
+**Conta → Sobre o app** mostra o commit de referência da versão publicada.
+
+## Vídeo de apresentação
+
+_Link do YouTube será adicionado aqui._
+
+## Equipe
+
+_Nome e RM dos integrantes._
+
+## Uso de IA generativa
+
+Ferramentas de IA foram usadas como apoio no desenvolvimento (estrutura inicial do projeto,
+revisão de código e textos). Todo o código foi revisado e testado pela equipe.
