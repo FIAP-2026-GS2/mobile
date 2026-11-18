@@ -6,7 +6,7 @@ import { toApiError } from './errors';
 
 export const apiClient = create({
   baseURL: API_BASE_URL,
-  timeout: 20000,
+  timeout: 60000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -46,7 +46,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     const apiError = toApiError(error);
-    const isAuthRoute = String(error?.config?.url ?? '').startsWith('/auth/');
+    const isAuthRoute = String(error?.config?.url ?? '').startsWith('/api/auth/');
     if (apiError.status === 401 && !isAuthRoute) {
       onUnauthorized?.();
     }

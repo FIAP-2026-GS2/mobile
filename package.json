@@ -43,8 +43,7 @@
     "lint": "expo lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit",
-    "mock-api": "node mock-api/server.mjs"
+    "typecheck": "tsc --noEmit"
   },
   "private": true
 }

@@ -8,15 +8,19 @@ import type { User } from '@/types/domain';
 type AuthContextValue = {
   user: User | null;
   isRestoring: boolean;
-  isManager: boolean;
-  signIn: (input: authApi.LoginInput) => Promise<void>;
-  signUp: (input: authApi.RegisterInput) => Promise<void>;
+  signIn: (input: authApi.SignInInput) => Promise<void>;
+  signUp: (input: authApi.SignUpInput) => Promise<void>;
   signOut: () => Promise<void>;
+  replaceUser: (user: User) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const TOKEN_KEY = 'auth-token';
+
+function hasToken(response: User | authApi.AuthResponse): response is authApi.AuthResponse {
+  return 'token' in response && Boolean(response.token);
+}
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
@@ -28,10 +32,24 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await preferenceStorage.remove(TOKEN_KEY);
   }
 
-  async function startSession({ token, user: loggedUser }: authApi.AuthResponse) {
+  async function startSession({ token, user: signedInUser }: authApi.AuthResponse) {
     setAuthToken(token);
     await preferenceStorage.set(TOKEN_KEY, token);
-    setUser(loggedUser);
+    setUser(signedInUser);
+  }
+
+  async function signIn(input: authApi.SignInInput) {
+    await startSession(await authApi.signIn(input));
+  }
+
+  async function signUp(input: authApi.SignUpInput) {
+    const response = await authApi.signUp(input);
+    if (hasToken(response)) {
+      await startSession(response);
+      return;
+    }
+    // Conta criada sem token: entra com as mesmas credenciais
+    await signIn({ email: input.email, password: input.password });
   }
 
   // Ao abrir o app, tenta reaproveitar o token salvo e confirma com a API quem é o usuário
@@ -54,7 +72,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     restoreSession();
   }, []);
 
-  // Qualquer 401 da API (token expirado/inválido) encerra a sessão e volta para o login
+  // Qualquer 401 da API (token expirado ou inválido) encerra a sessão e volta para o login
   useEffect(() => {
     setUnauthorizedHandler(() => {
       signOut();
@@ -65,10 +83,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const value: AuthContextValue = {
     user,
     isRestoring,
-    isManager: user?.userType === 'MANAGER',
-    signIn: async (input) => startSession(await authApi.login(input)),
-    signUp: async (input) => startSession(await authApi.register(input)),
+    signIn,
+    signUp,
     signOut,
+    replaceUser: setUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

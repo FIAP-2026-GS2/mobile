@@ -12,11 +12,14 @@ import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/context/AuthProvider';
 import { useTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/spacing';
-import { EMAIL_PATTERN, hasErrors, type FieldErrors } from '@/utils/validation';
+import {
+  EMAIL_PATTERN,
+  hasErrors,
+  MIN_PASSWORD_LENGTH,
+  type FieldErrors,
+} from '@/utils/validation';
 
 type SignUpForm = { name: string; email: string; password: string; confirmPassword: string };
-
-const MIN_PASSWORD_LENGTH = 8;
 
 function validate(form: SignUpForm): FieldErrors<SignUpForm> {
   return {

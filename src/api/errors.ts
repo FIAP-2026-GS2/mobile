@@ -1,9 +1,15 @@
 import { isAxiosError } from 'axios';
 
-// Corpo de erro padronizado pelo @RestControllerAdvice da API Java
+type FieldErrorItem = { field?: string; message?: string; defaultMessage?: string };
+
+// Aceita o formato de erro da API Java ({ message, fields: [...] })
+// e o ProblemDetails da API .NET ({ title, detail, errors: { campo: [mensagens] } })
 type ApiErrorBody = {
   message?: string;
-  errors?: Record<string, string> | { field: string; message: string }[];
+  detail?: string;
+  title?: string;
+  fields?: FieldErrorItem[] | Record<string, string>;
+  errors?: FieldErrorItem[] | Record<string, string | string[]>;
 };
 
 export class ApiError extends Error {
@@ -19,19 +25,32 @@ export class ApiError extends Error {
 }
 
 function extractFieldErrors(body: ApiErrorBody | undefined): Record<string, string> {
-  if (!body?.errors) return {};
-  if (Array.isArray(body.errors)) {
-    return Object.fromEntries(body.errors.map((item) => [item.field, item.message]));
+  const source = body?.fields ?? body?.errors;
+  if (!source) return {};
+
+  if (Array.isArray(source)) {
+    return Object.fromEntries(
+      source
+        .filter((item) => item.field)
+        .map((item) => [item.field as string, item.message ?? item.defaultMessage ?? '']),
+    );
   }
-  return body.errors;
+
+  return Object.fromEntries(
+    Object.entries(source).map(([field, messages]) => [
+      // ProblemDetails costuma mandar o nome do campo com inicial maiúscula
+      field.charAt(0).toLowerCase() + field.slice(1),
+      Array.isArray(messages) ? messages[0] : messages,
+    ]),
+  );
 }
 
 const STATUS_MESSAGES: Record<number, string> = {
   400: 'Confira os dados informados.',
-  401: 'Sua sessão expirou. Entre novamente.',
+  401: 'E-mail ou senha incorretos.',
   403: 'Você não tem permissão para esta ação.',
   404: 'Registro não encontrado.',
-  409: 'Este registro já existe ou foi alterado por outra pessoa.',
+  409: 'Este registro já existe.',
   429: 'Muitas tentativas em pouco tempo. Aguarde alguns segundos e tente de novo.',
 };
 
@@ -41,18 +60,20 @@ export function toApiError(error: unknown): ApiError {
 
   if (isAxiosError<ApiErrorBody>(error)) {
     if (!error.response) {
-      const message =
-        error.code === 'ECONNABORTED'
-          ? 'O servidor demorou para responder. Tente novamente.'
-          : 'Sem conexão com o servidor. Verifique sua internet.';
-      return new ApiError(message, null);
+      return new ApiError(
+        'Não foi possível conectar. Verifique sua internet e tente de novo.',
+        null,
+      );
     }
 
     const { status, data } = error.response;
     const message =
       data?.message ??
+      data?.detail ??
       STATUS_MESSAGES[status] ??
-      (status >= 500 ? 'O servidor está com problemas. Tente mais tarde.' : 'Algo deu errado.');
+      (status >= 500
+        ? 'O serviço está indisponível no momento. Tente mais tarde.'
+        : 'Algo deu errado.');
     return new ApiError(message, status, extractFieldErrors(data));
   }
 

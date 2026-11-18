@@ -1,6 +1,9 @@
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+// Mesmos limites da API Java (RegisterRequest e UpdateProfileRequest)
+export const MIN_PASSWORD_LENGTH = 8;
+export const MAX_PASSWORD_LENGTH = 72;
+export const MAX_NAME_LENGTH = 120;
 
 export type FieldErrors<T> = Partial<Record<keyof T, string>>;
 
