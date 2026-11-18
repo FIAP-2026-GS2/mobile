@@ -3,7 +3,7 @@
 
 # Smart Sampa Zeladoria
 
-Câmeras que já existem na cidade cuidando de postes, ruas e semáforos.
+Câmeras que já existem na cidade cuidando de postes, ruas e calçadas.
 
 </div>
 
@@ -12,37 +12,37 @@ Câmeras que já existem na cidade cuidando de postes, ruas e semáforos.
 ## Sobre o projeto
 
 O Smart Sampa já conecta dezenas de milhares de câmeras em São Paulo, hoje voltadas para a
-segurança. Muitas delas, por acaso ou conveniência, enxergam postes, vias e semáforos. Esta
+segurança. Muitas delas, por acaso ou conveniência, enxergam postes, vias e calçadas. Esta
 solução (Global Solution FIAP 2026/2, tema **CitizenTech**) reaproveita essas câmeras para a
-**zeladoria urbana**:
-
-1. O gestor cria uma **agenda de captura** semanal ou mensal para cada câmera.
-2. A imagem capturada passa por **visão computacional** e um **LLM** descreve o problema encontrado.
-3. O gestor revisa a detecção. Se for real, ela vira uma **ocorrência** para a equipe da subprefeitura.
-4. O **cidadão** também relata problemas e acompanha o atendimento pela linha do tempo.
+**zeladoria urbana**: a IA encontra problemas nas imagens, a prefeitura valida e atende, e o
+cidadão acompanha tudo por este aplicativo.
 
 > Projeto acadêmico. Não é um aplicativo oficial da Prefeitura de São Paulo.
 
 ## Funcionalidades
 
-| Perfil  | Telas                                                                                                           |
-| ------- | --------------------------------------------------------------------------------------------------------------- |
-| Todos   | Login, Cadastro, Início, Ocorrências (lista com filtros e paginação), Detalhe da ocorrência, Conta, Sobre o app |
-| Cidadão | Relatar problema, editar e excluir o próprio relato enquanto estiver aberto                                     |
-| Gestor  | Painel, Detecções da IA (confirmar ou descartar), Agendas de captura (CRUD), mudar status da ocorrência         |
+| Tela                  | O que faz                                                                      |
+| --------------------- | ------------------------------------------------------------------------------ |
+| Entrar / Criar conta  | Login e cadastro com JWT da API Java, validação dos campos e mensagens de erro |
+| Início                | Totais de ocorrências abertas, em atendimento e resolvidas, e as mais recentes |
+| Ocorrências           | Lista paginada com filtros por status, tipo de problema e bairro               |
+| Detalhe da ocorrência | Dados, linha do tempo do atendimento, abrir no mapa e perguntar ao assistente  |
+| Assistente            | Chat com IA (Spring AI) que responde com base nas ocorrências registradas      |
+| Conta                 | Perfil, tema claro/escuro, sair e excluir conta                                |
+| Editar perfil         | Troca de nome e senha                                                          |
+| Sobre o app           | Versão, plataforma e hash do commit da build publicada                         |
 
-- **Autenticação** com JWT da API Java: cadastro, login, sessão salva no `expo-secure-store`, logout e rotas protegidas por papel (`Stack.Protected` / `Tabs.Protected`).
-- **CRUDs pela API**: ocorrências (cidadão) e agendas de captura (gestor).
-- **Feedback visual**: loaders, mensagens de erro em português, "Tentar novamente", puxar para atualizar.
-- **Idempotência**: todo `POST` envia `Idempotency-Key`, então um toque duplo não cria registro repetido.
-- **Tema** escuro (padrão, como o Smart Sampa Cidadão) e claro, com fonte Montserrat.
-- **Sobre o app** mostra o hash do commit da build publicada.
+- **CRUD pela API Java**: o usuário cria a conta, consulta o perfil, edita nome e senha e exclui a conta.
+- **Rotas protegidas**: sem login, só as telas de entrar e criar conta existem (`Stack.Protected`).
+  O logout apaga o token salvo e volta para o login.
+- **Mesma navegação para todos os perfis** (cidadão, agente e administrador).
+- **Feedback visual**: carregamento, mensagens de erro em português, "Tentar novamente" e puxar para atualizar.
 
 ## Tecnologias
 
 - React Native + Expo SDK 58, TypeScript
-- Expo Router (navegação por arquivos, rotas protegidas)
-- Axios + TanStack Query (camada de acesso à API e cache)
+- Expo Router (navegação por arquivos e rotas protegidas)
+- Axios + TanStack Query (acesso à API e cache)
 - expo-secure-store (token JWT)
 - @expo-google-fonts/montserrat, @expo/vector-icons
 - ESLint (`eslint-config-expo`) + Prettier
@@ -53,17 +53,16 @@ solução (Global Solution FIAP 2026/2, tema **CitizenTech**) reaproveita essas 
 src/
   app/            rotas (cada arquivo é uma tela)
     (app)/        área logada
-      (tabs)/     abas: início, ocorrências, detecções, agendas, conta
+      (tabs)/     abas: início, ocorrências, assistente, conta
   api/            cliente Axios, erros e chamadas por recurso
-  components/     componentes de interface (ui/, issues/, monitoring/)
-  context/        AuthProvider
+  components/     componentes de interface (ui/, issues/, assistant/)
+  context/        AuthProvider (sessão)
   hooks/          queries e mutations do TanStack Query
-  storage/        armazenamento seguro de preferências e token
+  storage/        armazenamento seguro do token e das preferências
   theme/          cores, tipografia, espaçamentos e ThemeProvider
-  types/          tipos do domínio (espelham o modelo relacional)
+  types/          tipos do domínio no formato da API
   utils/          formatação, rótulos e validação
-docs/API.md       contrato esperado da API Java
-mock-api/         API simulada só para desenvolvimento
+docs/API.md       rotas usadas de cada API
 ```
 
 ## Como executar
@@ -78,29 +77,28 @@ git clone https://github.com/FIAP-2026-GS2/mobile.git
 cd mobile && npm install
 ```
 
-Apontando para a API Java publicada:
-
 ```bash
-EXPO_PUBLIC_API_URL=https://<url-da-api> npx expo start
+npx expo start
 ```
 
-Para desenvolver sem a API Java, use a API simulada (dados em memória):
-
-```bash
-npm run mock-api
-```
+O app usa a API Java publicada em `https://sampatech-portal.onrender.com`. Para apontar para outro
+servidor:
 
 ```bash
 EXPO_PUBLIC_API_URL=http://<ip-do-computador>:8080 npx expo start
 ```
 
-Usuários de teste da API simulada: `cidadao@teste.com` e `gestor@teste.com`, senha `senha123`.
-
 Verificações de qualidade:
 
 ```bash
 npm run lint
+```
+
+```bash
 npm run typecheck
+```
+
+```bash
 npm run format:check
 ```
 
@@ -115,9 +113,16 @@ _Link do YouTube será adicionado aqui._
 
 ## Equipe
 
-_Nome e RM dos integrantes._
+| Nome                        | RM       | Turma  |
+| --------------------------- | -------- | ------ |
+| Ana Carolina Pereira Fontes | RM562145 | 2TDSPV |
+| João Victor Nascimento Adão | RM563409 | 2TDSPX |
+| Johnny Dias Mathias Junior  | RM566516 | 2TDSPX |
+| Luisa Ganasevici de Abreu   | RM563403 | 2TDSPV |
+| Matheus Moya de Oliveira    | RM562822 | 2TDSPV |
 
 ## Uso de IA generativa
 
-Ferramentas de IA foram usadas como apoio no desenvolvimento (estrutura inicial do projeto,
-revisão de código e textos). Todo o código foi revisado e testado pela equipe.
+**Ferramenta:** Claude Code (Anthropic), usado como apoio na estrutura do projeto, na integração
+com as APIs, na revisão de código e nos testes. Cada etapa foi testada no app contra a API real e
+revisada pela equipe antes do commit.

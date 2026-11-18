@@ -1,168 +1,44 @@
-# Contrato da API (consumida pelo app)
+# APIs consumidas pelo app
 
-Este é o contrato que o app espera da **API Java (Spring Boot)**. A pasta `mock-api/` implementa
-exatamente estas rotas em memória, só para desenvolver o app enquanto a API real não está no ar.
+## API Java (SampaTech - Portal da Transparência)
 
-- Base URL configurada por `EXPO_PUBLIC_API_URL`.
-- JSON em camelCase; datas com horário em ISO-8601 (`2026-11-12T10:30:00Z`), datas sem horário em `yyyy-MM-dd`.
-- Autenticação: `Authorization: Bearer <JWT>` em todas as rotas, exceto `/auth/login` e `/auth/register`.
-- Papéis (`userType`): `CITIZEN` (cidadão) e `MANAGER` (gestor de zeladoria). Rotas marcadas com 🔒 exigem `MANAGER` (403 para os outros).
-- Todo `POST` envia o cabeçalho `Idempotency-Key` (UUID). A API deve devolver a mesma resposta se receber a mesma chave de novo, sem repetir a operação.
-- Erros seguem o `@RestControllerAdvice`:
+- Produção: `https://sampatech-portal.onrender.com` (Swagger em `/swagger-ui.html`)
+- Outro servidor: defina `EXPO_PUBLIC_API_URL`.
+- Autenticação: `Authorization: Bearer <JWT>`; o token fica salvo no `expo-secure-store`.
 
-```json
-{
-  "status": 400,
-  "message": "Confira os dados informados.",
-  "errors": { "title": "Título muito curto." }
-}
-```
+| Funcionalidade do app                                              | Método e rota                    | Arquivo                                       |
+| ------------------------------------------------------------------ | -------------------------------- | --------------------------------------------- |
+| Cadastro                                                           | `POST /api/auth/register`        | `src/api/auth.api.ts`                         |
+| Login                                                              | `POST /api/auth/login`           | `src/api/auth.api.ts`                         |
+| Restaurar sessão / ver perfil                                      | `GET /api/users/me`              | `src/api/auth.api.ts`, `src/api/users.api.ts` |
+| Editar perfil (nome e senha)                                       | `PUT /api/users/me`              | `src/api/users.api.ts`                        |
+| Excluir conta                                                      | `DELETE /api/users/me`           | `src/api/users.api.ts`                        |
+| Lista de ocorrências (filtros por status, tipo e bairro; paginada) | `GET /api/issues`                | `src/api/issues.api.ts`                       |
+| Detalhe e histórico da ocorrência                                  | `GET /api/issues/{id}`           | `src/api/issues.api.ts`                       |
+| Tipos de problema (filtro)                                         | `GET /api/issue-types`           | `src/api/issues.api.ts`                       |
+| Assistente com IA (Spring AI)                                      | `POST /api/chat`                 | `src/api/assistant.api.ts`                    |
+| Histórico do assistente                                            | `GET /api/users/me/chat-history` | `src/api/assistant.api.ts`                    |
 
-`errors` também pode ser uma lista `[{ "field": "title", "message": "..." }]`. O app mostra cada mensagem no campo correspondente.
-Para `429 Too Many Requests` (rate limiting), o app mostra "Muitas tentativas em pouco tempo".
+O **CRUD** exigido em Mobile é o do próprio usuário: criar (cadastro), ler (perfil), atualizar
+(editar perfil) e excluir (excluir conta), todos pela API Java.
 
-## Autenticação
+### Pontos em aberto na API Java
 
-| Método | Rota             | Corpo                       | Resposta                                      |
-| ------ | ---------------- | --------------------------- | --------------------------------------------- |
-| POST   | `/auth/register` | `{ name, email, password }` | `201 { token, user }` (sempre cria `CITIZEN`) |
-| POST   | `/auth/login`    | `{ email, password }`       | `200 { token, user }` ou `401`                |
-| GET    | `/auth/me`       | –                           | `200 user`                                    |
+- `POST /api/auth/register` devolve só o usuário, sem token. O app entra logo em seguida com as
+  mesmas credenciais; quando a API passar a devolver o token, o app já usa a resposta direto.
+- `POST /api/chat` responde, mas a conversa não aparece em `GET /api/users/me/chat-history`. O app
+  mostra as respostas da sessão atual e junta com o histórico assim que a API passar a gravá-lo.
+- A API não envia cabeçalhos CORS, então a versão web do app não acessa a API direto do navegador.
+  No Android e no iOS isso não se aplica.
 
-`user`: `{ id, name, email, userType, registrationDate }`
+## API .NET (envio de fotos para confirmar ou contestar ocorrências)
 
-## Ocorrências (`ISSUE_REPORT` + `ISSUE_HISTORY`)
+Planejada, ainda não integrada. A API .NET hoje expõe rotas para a prefeitura e para o serviço de
+IA (login com usuários fixos `ADMIN`, `MANAGER`, `VIEWER` e `IA_SERVICE`) e a consulta pública
+`GET /api/public/issue-reports`, mas ainda não tem rota para o cidadão enviar uma foto, nem uma URL
+publicada. Para o app integrar, ela precisa de:
 
-| Método   | Rota                                                                        | Observação                                                               |
-| -------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| GET      | `/issue-reports?page=0&size=10&sort=openingDate,desc&status=OPEN&mine=true` | Paginado (`Page<T>` do Spring). `mine=true` filtra pelo usuário do token |
-| GET      | `/issue-reports/{id}`                                                       | Inclui `history` (linha do tempo)                                        |
-| POST     | `/issue-reports`                                                            | Cidadão cria relato (`source = CITIZEN`, `status = OPEN`)                |
-| PUT      | `/issue-reports/{id}`                                                       | Só o autor e só com `status = OPEN`                                      |
-| DELETE   | `/issue-reports/{id}`                                                       | Só o autor e só com `status = OPEN` → `204`                              |
-| PATCH 🔒 | `/issue-reports/{id}/status`                                                | `{ status, notes }` → grava linha em `ISSUE_HISTORY`                     |
-
-Corpo de POST/PUT:
-
-```json
-{
-  "title": "Poste apagado",
-  "description": "Há três noites...",
-  "severity": "HIGH",
-  "issueTypeId": 1,
-  "monitoringPointId": 1
-}
-```
-
-Resposta (`IssueReport`):
-
-```json
-{
-  "id": 1,
-  "title": "...",
-  "description": "...",
-  "source": "CITIZEN",
-  "severity": "HIGH",
-  "status": "IN_PROGRESS",
-  "openingDate": "...",
-  "resolutionDate": null,
-  "issueType": { "id": 1, "name": "Poste apagado", "category": "Iluminação" },
-  "monitoringPoint": {
-    "id": 1,
-    "street": "Av. Paulista",
-    "streetNumber": "1578",
-    "neighborhood": "Bela Vista",
-    "city": "São Paulo",
-    "latitude": -23.56,
-    "longitude": -46.65
-  },
-  "reportedBy": { "id": 1, "name": "Ana" },
-  "detection": null,
-  "history": [
-    {
-      "id": 1,
-      "previousStatus": null,
-      "newStatus": "OPEN",
-      "notes": "...",
-      "changeDate": "...",
-      "changedBy": "Ana"
-    }
-  ]
-}
-```
-
-Enums: `status` = `OPEN | IN_PROGRESS | RESOLVED | CANCELLED`; `severity` = `LOW | MEDIUM | HIGH | CRITICAL`; `source` = `CITIZEN | CAMERA`.
-
-## Catálogos
-
-| Método | Rota                                                                                                                        |
-| ------ | --------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/issue-types`                                                                                                              |
-| GET    | `/monitoring-points`                                                                                                        |
-| GET 🔒 | `/cameras` (cada câmera traz `monitoringPoint`)                                                                             |
-| GET    | `/dashboard/summary` → `{ openIssues, inProgressIssues, resolvedIssues, pendingDetections, activeSchedules, myOpenIssues }` |
-
-## Agendas de captura 🔒 (`CAPTURE_SCHEDULE`)
-
-| Método | Rota                              |
-| ------ | --------------------------------- |
-| GET    | `/capture-schedules`              |
-| GET    | `/capture-schedules/{id}`         |
-| POST   | `/capture-schedules`              |
-| PUT    | `/capture-schedules/{id}`         |
-| DELETE | `/capture-schedules/{id}` → `204` |
-
-```json
-{
-  "cameraId": 1,
-  "frequency": "WEEKLY",
-  "weekday": 1,
-  "dayOfMonth": null,
-  "executionTime": "22:00",
-  "startDate": "2026-11-12",
-  "endDate": null,
-  "isActive": true
-}
-```
-
-`frequency` = `WEEKLY` (usa `weekday` 1=segunda … 7=domingo) ou `MONTHLY` (usa `dayOfMonth` 1–28). A resposta troca `cameraId` por `camera`.
-
-## Detecções da IA 🔒 (`AI_DETECTION` + `AI_ANALYSIS` + `CAPTURE`)
-
-| Método | Rota                                  | Observação                                                    |
-| ------ | ------------------------------------- | ------------------------------------------------------------- |
-| GET    | `/ai-detections?reviewStatus=PENDING` | `PENDING                                                      | CONFIRMED | DISMISSED` |
-| GET    | `/ai-detections/{id}`                 |                                                               |
-| POST   | `/ai-detections/{id}/confirm`         | Cria `ISSUE_REPORT` com `source = CAMERA` → `201 IssueReport` |
-| POST   | `/ai-detections/{id}/dismiss`         | Marca como falso positivo                                     |
-
-```json
-{
-  "id": 11,
-  "confidenceScore": 0.87,
-  "estimatedSeverity": "HIGH",
-  "description": "Texto gerado pelo LLM (Spring AI) a partir da detecção",
-  "aiModel": "YOLOv8-zeladoria",
-  "imageUrl": null,
-  "reviewStatus": "PENDING",
-  "detectionCoordinates": "220,40,300,380",
-  "analysis": { "modelVersion": "1.2", "analysisDate": "...", "processingTimeMs": 760 },
-  "capture": {
-    "id": 101,
-    "captureDate": "...",
-    "camera": { "id": 1, "cameraCode": "CAM-BV-0142" },
-    "monitoringPoint": {}
-  },
-  "suggestedIssueType": { "id": 1, "name": "Poste apagado", "category": "Iluminação" },
-  "issueReportId": null
-}
-```
-
-## Diferenças em relação ao modelo ER atual
-
-O app precisa de alguns campos que ainda não aparecem no diagrama:
-
-- `ISSUE_REPORT.ID_POINT` (FK para `MONITORING_POINT`): onde fica o problema relatado pelo cidadão.
-- `CAPTURE_SCHEDULE.FREQUENCY` e `CAPTURE_SCHEDULE.DAY_OF_MONTH`: para agendas mensais, além das semanais.
-- `reviewStatus` da detecção pode ser derivado (`PENDING` = sem ocorrência e não descartada) ou virar uma coluna em `AI_DETECTION`.
-- `suggestedIssueType` pode vir da relação `AI_DETECTION → ISSUE_TYPE` que já existe no diagrama.
+- uma rota que receba a foto (`multipart/form-data`) e a decisão `CONFIRM` ou `CONTEST` de uma
+  ocorrência;
+- uma forma de o cidadão se autenticar (aceitar o JWT emitido pela API Java ou um login próprio);
+- a URL do deploy no Azure.
