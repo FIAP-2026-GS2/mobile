@@ -46,7 +46,13 @@ export function ChipGroup<T extends string | number>({
             borderColor: selected ? colors.primary : colors.border,
           },
         ]}>
-        <AppText variant="caption" style={{ color: selected ? colors.onPrimary : colors.text }}>
+        {/* No Android a quebra de linha "highQuality" mede o texto mais largo do que desenha:
+            a última palavra ia para uma segunda linha escondida e sobrava um espaço vazio */}
+        <AppText
+          variant="caption"
+          numberOfLines={1}
+          textBreakStrategy="simple"
+          style={{ color: selected ? colors.onPrimary : colors.text }}>
           {option.label}
         </AppText>
       </Pressable>
