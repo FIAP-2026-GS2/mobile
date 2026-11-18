@@ -22,10 +22,9 @@ export async function signIn(input: SignInInput) {
   return data;
 }
 
-// Hoje a API devolve só o usuário criado; quando passar a devolver o token,
-// o AuthProvider já aproveita a resposta sem precisar de um login extra
+// O cadastro já devolve o token, então a pessoa entra direto no app
 export async function signUp(input: SignUpInput) {
-  const { data } = await apiClient.post<User | AuthResponse>('/api/auth/register', input);
+  const { data } = await apiClient.post<AuthResponse>('/api/auth/register', input);
   return data;
 }
 

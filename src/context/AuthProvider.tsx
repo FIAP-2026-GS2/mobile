@@ -18,10 +18,6 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const TOKEN_KEY = 'auth-token';
 
-function hasToken(response: User | authApi.AuthResponse): response is authApi.AuthResponse {
-  return 'token' in response && Boolean(response.token);
-}
-
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
   const [isRestoring, setIsRestoring] = useState(true);
@@ -43,13 +39,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }
 
   async function signUp(input: authApi.SignUpInput) {
-    const response = await authApi.signUp(input);
-    if (hasToken(response)) {
-      await startSession(response);
-      return;
-    }
-    // Conta criada sem token: entra com as mesmas credenciais
-    await signIn({ email: input.email, password: input.password });
+    await startSession(await authApi.signUp(input));
   }
 
   // Ao abrir o app, tenta reaproveitar o token salvo e confirma com a API quem é o usuário

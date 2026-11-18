@@ -24,8 +24,6 @@ O **CRUD** exigido em Mobile é o do próprio usuário: criar (cadastro), ler (p
 
 ### Pontos em aberto na API Java
 
-- `POST /api/auth/register` devolve só o usuário, sem token. O app entra logo em seguida com as
-  mesmas credenciais; quando a API passar a devolver o token, o app já usa a resposta direto.
 - `POST /api/chat` responde, mas a conversa não aparece em `GET /api/users/me/chat-history`. O app
   mostra as respostas da sessão atual e junta com o histórico assim que a API passar a gravá-lo.
 - A API não envia cabeçalhos CORS, então a versão web do app não acessa a API direto do navegador.
