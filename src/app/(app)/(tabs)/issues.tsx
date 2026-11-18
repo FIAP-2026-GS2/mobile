@@ -4,47 +4,45 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'r
 
 import { IssueCard } from '@/components/issues/IssueCard';
 import { ChipGroup, type ChipOption } from '@/components/ui/ChipGroup';
-import { FloatingButton } from '@/components/ui/FloatingButton';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/StateViews';
-import { useAuth } from '@/context/AuthProvider';
-import { useIssueList } from '@/hooks/useIssues';
+import { TextField } from '@/components/ui/TextField';
+import { useIssueList, useIssueTypes } from '@/hooks/useIssues';
 import { useTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/spacing';
 import type { IssueStatus } from '@/types/domain';
-import { issueStatusLabels } from '@/utils/labels';
+import { filterableStatuses, getStatusLabel } from '@/utils/labels';
 
-type StatusFilter = IssueStatus | 'ALL';
-type ScopeFilter = 'MINE' | 'CITY';
+const ALL = 'ALL';
 
-const statusOptions: ChipOption<StatusFilter>[] = [
-  { value: 'ALL', label: 'Todas' },
-  ...(Object.keys(issueStatusLabels) as IssueStatus[]).map((status) => ({
-    value: status,
-    label: issueStatusLabels[status].label,
-  })),
-];
-
-const scopeOptions: ChipOption<ScopeFilter>[] = [
-  { value: 'MINE', label: 'Meus relatos' },
-  { value: 'CITY', label: 'Toda a cidade' },
+const statusOptions: ChipOption<IssueStatus | typeof ALL>[] = [
+  { value: ALL, label: 'Todas' },
+  ...filterableStatuses.map((status) => ({ value: status, label: getStatusLabel(status).label })),
 ];
 
 export default function IssuesScreen() {
   const { colors } = useTheme();
-  const { isManager } = useAuth();
-  const [status, setStatus] = useState<StatusFilter>('ALL');
-  const [scope, setScope] = useState<ScopeFilter>('MINE');
+  const issueTypes = useIssueTypes();
+  const [status, setStatus] = useState<IssueStatus | typeof ALL>(ALL);
+  const [typeId, setTypeId] = useState<number | typeof ALL>(ALL);
+  const [neighborhoodInput, setNeighborhoodInput] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
 
   const issues = useIssueList({
-    status: status === 'ALL' ? undefined : status,
-    mine: !isManager && scope === 'MINE' ? true : undefined,
+    status: status === ALL ? undefined : status,
+    typeId: typeId === ALL ? undefined : typeId,
+    neighborhood: neighborhood || undefined,
   });
+
+  const typeOptions: ChipOption<number | typeof ALL>[] = [
+    { value: ALL, label: 'Todos os tipos' },
+    ...(issueTypes.data ?? []).map((type) => ({ value: type.id, label: type.name })),
+  ];
 
   const items = issues.data?.pages.flatMap((page) => page.content) ?? [];
 
   function renderContent() {
     if (issues.isLoading) return <LoadingState message="Buscando ocorrências..." />;
-    if (issues.isError) return <ErrorState error={issues.error} onRetry={issues.refetch} />;
+    if (issues.isError) return <ErrorState error={issues.error} onRetry={() => issues.refetch()} />;
 
     return (
       <FlatList
@@ -77,7 +75,7 @@ export default function IssuesScreen() {
           <EmptyState
             icon="checkmark-done-outline"
             title="Nenhuma ocorrência encontrada"
-            message="Tente outro filtro ou relate um novo problema."
+            message="Tente outro filtro ou outro bairro."
           />
         }
       />
@@ -87,17 +85,19 @@ export default function IssuesScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.filters}>
-        {!isManager ? <ChipGroup options={scopeOptions} value={scope} onChange={setScope} /> : null}
+        <TextField
+          label="Bairro"
+          value={neighborhoodInput}
+          onChangeText={setNeighborhoodInput}
+          onSubmitEditing={() => setNeighborhood(neighborhoodInput.trim())}
+          onBlur={() => setNeighborhood(neighborhoodInput.trim())}
+          placeholder="Ex.: Bela Vista"
+          returnKeyType="search"
+        />
         <ChipGroup options={statusOptions} value={status} onChange={setStatus} scrollable />
+        <ChipGroup options={typeOptions} value={typeId} onChange={setTypeId} scrollable />
       </View>
       {renderContent()}
-      {!isManager ? (
-        <FloatingButton
-          icon="add"
-          accessibilityLabel="Relatar um problema"
-          onPress={() => router.push('/issue/form')}
-        />
-      ) : null}
     </View>
   );
 }
@@ -114,7 +114,6 @@ const styles = StyleSheet.create({
   list: {
     padding: spacing.xl,
     gap: spacing.md,
-    paddingBottom: 120,
     flexGrow: 1,
   },
 });

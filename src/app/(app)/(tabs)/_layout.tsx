@@ -2,7 +2,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
 
-import { useAuth } from '@/context/AuthProvider';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts } from '@/theme/typography';
 
@@ -15,9 +14,9 @@ function tabIcon(name: IconName) {
   return TabIcon;
 }
 
+// Todos os perfis (cidadão, agente e administrador) veem as mesmas abas
 export default function TabsLayout() {
   const { colors } = useTheme();
-  const { isManager } = useAuth();
 
   return (
     <Tabs
@@ -40,19 +39,10 @@ export default function TabsLayout() {
         name="issues"
         options={{ title: 'Ocorrências', tabBarIcon: tabIcon('warning-outline') }}
       />
-
-      {/* Abas que só aparecem para o gestor de zeladoria */}
-      <Tabs.Protected guard={isManager}>
-        <Tabs.Screen
-          name="detections"
-          options={{ title: 'Detecções', tabBarIcon: tabIcon('scan-outline') }}
-        />
-        <Tabs.Screen
-          name="schedules"
-          options={{ title: 'Agendas', tabBarIcon: tabIcon('calendar-outline') }}
-        />
-      </Tabs.Protected>
-
+      <Tabs.Screen
+        name="assistant"
+        options={{ title: 'Assistente', tabBarIcon: tabIcon('sparkles-outline') }}
+      />
       <Tabs.Screen
         name="account"
         options={{ title: 'Conta', tabBarIcon: tabIcon('person-circle-outline') }}

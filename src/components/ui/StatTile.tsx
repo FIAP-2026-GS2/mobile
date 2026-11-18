@@ -10,7 +10,7 @@ import { AppText } from './AppText';
 type StatTileProps = {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
-  value: number;
+  value: number | string;
   tone: keyof ColorPalette;
 };
 

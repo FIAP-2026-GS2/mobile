@@ -1,9 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { Linking, RefreshControl, StyleSheet, View } from 'react-native';
 
-import { getErrorMessage } from '@/api/errors';
 import { IssueTimeline } from '@/components/issues/IssueTimeline';
-import { StatusChangeForm } from '@/components/issues/StatusChangeForm';
 import { AppText } from '@/components/ui/AppText';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -11,48 +9,30 @@ import { Card } from '@/components/ui/Card';
 import { InfoRow } from '@/components/ui/InfoRow';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { ErrorState, LoadingState } from '@/components/ui/StateViews';
-import { useAuth } from '@/context/AuthProvider';
-import { useDeleteIssue, useIssue } from '@/hooks/useIssues';
+import { useIssue } from '@/hooks/useIssues';
 import { useTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/spacing';
-import { confirmAction, notify } from '@/utils/confirm';
-import { goBackOr } from '@/utils/navigation';
-import { formatAddress, formatDateTime, formatPercent } from '@/utils/format';
-import { issueStatusLabels, severityLabels, sourceLabels } from '@/utils/labels';
+import { formatDateTime, formatLocation } from '@/utils/format';
+import { categoryLabels, getStatusLabel, severityLabels, sourceLabels } from '@/utils/labels';
+
+function openInMaps(latitude: number, longitude: number) {
+  Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`);
+}
 
 export default function IssueDetailScreen() {
   const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const issueId = Number(id);
-  const { user, isManager } = useAuth();
-  const issue = useIssue(issueId);
-  const deleteIssue = useDeleteIssue();
+  const issue = useIssue(Number(id));
 
   if (issue.isLoading) return <LoadingState />;
   if (issue.isError || !issue.data) {
-    return <ErrorState error={issue.error} onRetry={issue.refetch} />;
+    return <ErrorState error={issue.error} onRetry={() => issue.refetch()} />;
   }
 
-  const data = issue.data;
-  const status = issueStatusLabels[data.status];
-  // O cidadão só altera o próprio relato enquanto ninguém começou a atendê-lo
-  const canEdit = !isManager && data.reportedBy?.id === user?.id && data.status === 'OPEN';
-  const isClosed = data.status === 'RESOLVED' || data.status === 'CANCELLED';
-
-  async function handleDelete() {
-    const confirmed = await confirmAction(
-      'Excluir relato',
-      'Esta ação não pode ser desfeita.',
-      'Excluir',
-    );
-    if (!confirmed) return;
-    try {
-      await deleteIssue.mutateAsync(issueId);
-      goBackOr('/issues');
-    } catch (error) {
-      notify('Não foi possível excluir', getErrorMessage(error));
-    }
-  }
+  const { summary, description, latitude, longitude, history } = issue.data;
+  const status = getStatusLabel(summary.status);
+  const severity = summary.severity ? severityLabels[summary.severity] : null;
+  const hasCoordinates = latitude !== null && longitude !== null;
 
   return (
     <ScreenContainer
@@ -67,92 +47,77 @@ export default function IssueDetailScreen() {
       }>
       <View style={styles.badges}>
         <Badge label={status.label} tone={status.tone} />
-        {data.severity ? (
-          <Badge
-            label={`Gravidade ${severityLabels[data.severity].label.toLowerCase()}`}
-            tone={severityLabels[data.severity].tone}
-          />
+        {severity ? (
+          <Badge label={`Gravidade ${severity.label.toLowerCase()}`} tone={severity.tone} />
         ) : null}
       </View>
 
       <View style={styles.titleBlock}>
         <AppText variant="overline" color="primary">
-          {data.issueType.category.toUpperCase()} · {data.issueType.name.toUpperCase()}
+          {categoryLabels[summary.category].toUpperCase()} · {summary.issueType.toUpperCase()}
         </AppText>
-        <AppText variant="title">{data.title}</AppText>
-        {data.description ? <AppText color="textSecondary">{data.description}</AppText> : null}
+        <AppText variant="title">{summary.title}</AppText>
+        {description ? <AppText color="textSecondary">{description}</AppText> : null}
       </View>
 
       <Card>
-        {data.monitoringPoint ? (
-          <InfoRow
-            icon="location-outline"
-            label="Local"
-            value={formatAddress(data.monitoringPoint)}
-          />
-        ) : null}
         <InfoRow
-          icon={data.source === 'CAMERA' ? 'videocam-outline' : 'person-outline'}
-          label="Origem"
-          value={
-            data.reportedBy
-              ? `${sourceLabels[data.source]} (${data.reportedBy.name})`
-              : sourceLabels[data.source]
-          }
+          icon="location-outline"
+          label="Local"
+          value={formatLocation(summary.street, summary.neighborhood)}
         />
-        <InfoRow icon="time-outline" label="Aberta em" value={formatDateTime(data.openingDate)} />
-        {data.resolutionDate ? (
+        <InfoRow
+          icon={summary.source === 'AI' ? 'videocam-outline' : 'person-outline'}
+          label="Origem"
+          value={sourceLabels[summary.source]}
+        />
+        <InfoRow
+          icon="time-outline"
+          label="Aberta em"
+          value={formatDateTime(summary.openingDate)}
+        />
+        {summary.resolutionDate ? (
           <InfoRow
             icon="checkmark-done-outline"
             label="Resolvida em"
-            value={formatDateTime(data.resolutionDate)}
+            value={formatDateTime(summary.resolutionDate)}
           />
+        ) : null}
+        {summary.source === 'AI' ? (
+          <AppText variant="caption" color="textMuted">
+            Detectada automaticamente pela IA nas imagens das câmeras e validada pela prefeitura.
+          </AppText>
         ) : null}
       </Card>
 
-      {data.detection ? (
-        <Card>
-          <AppText variant="subtitle">Análise da câmera</AppText>
-          <InfoRow
-            icon="speedometer-outline"
-            label="Confiança da detecção"
-            value={`${formatPercent(data.detection.confidenceScore)} · modelo ${data.detection.aiModel}`}
-          />
-          {data.detection.description ? (
-            <AppText color="textSecondary">{data.detection.description}</AppText>
-          ) : null}
-          <AppText variant="caption" color="textMuted">
-            Texto gerado por IA e revisado por um gestor antes de abrir a ocorrência.
-          </AppText>
-        </Card>
-      ) : null}
-
-      {data.history && data.history.length > 0 ? (
+      {history.length > 0 ? (
         <Card>
           <AppText variant="subtitle">Acompanhamento</AppText>
-          <IssueTimeline entries={data.history} />
+          <IssueTimeline entries={history} />
         </Card>
       ) : null}
 
-      {isManager && !isClosed ? <StatusChangeForm issue={data} /> : null}
-
-      {canEdit ? (
-        <View style={styles.actions}>
+      <View style={styles.actions}>
+        {hasCoordinates ? (
           <Button
-            title="Editar relato"
-            icon="create-outline"
+            title="Ver no mapa"
+            icon="map-outline"
             variant="secondary"
-            onPress={() => router.push({ pathname: '/issue/form', params: { id: data.id } })}
+            onPress={() => openInMaps(latitude, longitude)}
           />
-          <Button
-            title="Excluir relato"
-            icon="trash-outline"
-            variant="danger"
-            onPress={handleDelete}
-            loading={deleteIssue.isPending}
-          />
-        </View>
-      ) : null}
+        ) : null}
+        <Button
+          title="Perguntar ao assistente"
+          icon="sparkles-outline"
+          variant="secondary"
+          onPress={() =>
+            router.push({
+              pathname: '/assistant',
+              params: { question: `Qual é a situação da ocorrência "${summary.title}"?` },
+            })
+          }
+        />
+      </View>
     </ScreenContainer>
   );
 }

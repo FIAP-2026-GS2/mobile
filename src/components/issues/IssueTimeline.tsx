@@ -5,19 +5,19 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/spacing';
 import type { IssueHistoryEntry } from '@/types/domain';
 import { formatDateTime } from '@/utils/format';
-import { issueStatusLabels } from '@/utils/labels';
+import { getStatusLabel } from '@/utils/labels';
 
-// Linha do tempo montada a partir de ISSUE_HISTORY (gravado por trigger no Oracle)
+// Linha do tempo montada a partir de ISSUE_HISTORY
 export function IssueTimeline({ entries }: { entries: IssueHistoryEntry[] }) {
   const { colors } = useTheme();
 
   return (
     <View>
       {entries.map((entry, index) => {
-        const status = issueStatusLabels[entry.newStatus];
+        const status = getStatusLabel(entry.newStatus);
         const isLast = index === entries.length - 1;
         return (
-          <View key={entry.id} style={styles.item}>
+          <View key={`${entry.changeDate}-${entry.newStatus}`} style={styles.item}>
             <View style={styles.rail}>
               <View style={[styles.dot, { backgroundColor: colors[status.tone] }]} />
               {!isLast ? <View style={[styles.line, { backgroundColor: colors.border }]} /> : null}
@@ -26,7 +26,6 @@ export function IssueTimeline({ entries }: { entries: IssueHistoryEntry[] }) {
               <AppText variant="bodyStrong">{status.label}</AppText>
               <AppText variant="caption" color="textMuted">
                 {formatDateTime(entry.changeDate)}
-                {entry.changedBy ? ` · ${entry.changedBy}` : ''}
               </AppText>
               {entry.notes ? <AppText color="textSecondary">{entry.notes}</AppText> : null}
             </View>
