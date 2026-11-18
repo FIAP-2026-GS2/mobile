@@ -37,24 +37,24 @@ export default function TabsLayout() {
         options={{ title: 'Início', headerShown: false, tabBarIcon: tabIcon('home-outline') }}
       />
       <Tabs.Screen
-        name="ocorrencias"
+        name="issues"
         options={{ title: 'Ocorrências', tabBarIcon: tabIcon('warning-outline') }}
       />
 
       {/* Abas que só aparecem para o gestor de zeladoria */}
       <Tabs.Protected guard={isManager}>
         <Tabs.Screen
-          name="deteccoes"
+          name="detections"
           options={{ title: 'Detecções', tabBarIcon: tabIcon('scan-outline') }}
         />
         <Tabs.Screen
-          name="agendas"
+          name="schedules"
           options={{ title: 'Agendas', tabBarIcon: tabIcon('calendar-outline') }}
         />
       </Tabs.Protected>
 
       <Tabs.Screen
-        name="conta"
+        name="account"
         options={{ title: 'Conta', tabBarIcon: tabIcon('person-circle-outline') }}
       />
     </Tabs>

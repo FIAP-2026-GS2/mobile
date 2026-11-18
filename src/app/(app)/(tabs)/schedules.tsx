@@ -17,7 +17,7 @@ export default function SchedulesScreen() {
   const schedules = useSchedules();
 
   function openForm(id?: number) {
-    router.push({ pathname: '/agenda/formulario', params: id ? { id } : {} });
+    router.push({ pathname: '/schedule/form', params: id ? { id } : {} });
   }
 
   function renderContent() {

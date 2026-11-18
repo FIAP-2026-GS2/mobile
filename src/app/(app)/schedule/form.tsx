@@ -149,7 +149,7 @@ function ScheduleFormContent({ scheduleId, initialForm, cameras }: ScheduleFormC
     try {
       await saveSchedule.mutateAsync(input);
       notify(isEditing ? 'Agenda atualizada' : 'Agenda criada', 'A câmera seguirá o novo horário.');
-      goBackOr('/agendas');
+      goBackOr('/schedules');
     } catch (error) {
       const apiError = toApiError(error);
       setErrors({ ...validation, ...apiError.fieldErrors });
@@ -167,7 +167,7 @@ function ScheduleFormContent({ scheduleId, initialForm, cameras }: ScheduleFormC
     if (!confirmed) return;
     try {
       await deleteSchedule.mutateAsync(scheduleId);
-      goBackOr('/agendas');
+      goBackOr('/schedules');
     } catch (error) {
       notify('Não foi possível excluir', toApiError(error).message);
     }

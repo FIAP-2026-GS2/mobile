@@ -108,13 +108,13 @@ export default function HomeScreen() {
             <Button
               title="Revisar detecções da IA"
               icon="scan-outline"
-              onPress={() => router.push('/deteccoes')}
+              onPress={() => router.push('/detections')}
             />
           ) : (
             <Button
               title="Relatar um problema"
               icon="add-circle-outline"
-              onPress={() => router.push('/ocorrencia/formulario')}
+              onPress={() => router.push('/issue/form')}
             />
           )}
 
@@ -134,9 +134,7 @@ export default function HomeScreen() {
               <IssueCard
                 key={issue.id}
                 issue={issue}
-                onPress={() =>
-                  router.push({ pathname: '/ocorrencia/[id]', params: { id: issue.id } })
-                }
+                onPress={() => router.push({ pathname: '/issue/[id]', params: { id: issue.id } })}
               />
             ))
           )}

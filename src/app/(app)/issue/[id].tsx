@@ -48,7 +48,7 @@ export default function IssueDetailScreen() {
     if (!confirmed) return;
     try {
       await deleteIssue.mutateAsync(issueId);
-      goBackOr('/ocorrencias');
+      goBackOr('/issues');
     } catch (error) {
       notify('Não foi possível excluir', getErrorMessage(error));
     }
@@ -142,9 +142,7 @@ export default function IssueDetailScreen() {
             title="Editar relato"
             icon="create-outline"
             variant="secondary"
-            onPress={() =>
-              router.push({ pathname: '/ocorrencia/formulario', params: { id: data.id } })
-            }
+            onPress={() => router.push({ pathname: '/issue/form', params: { id: data.id } })}
           />
           <Button
             title="Excluir relato"

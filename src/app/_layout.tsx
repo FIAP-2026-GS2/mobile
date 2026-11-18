@@ -48,8 +48,8 @@ function RootNavigator() {
         </Stack.Protected>
         {/* Login e cadastro somem depois de entrar; o app redireciona para o login ao sair */}
         <Stack.Protected guard={!user}>
-          <Stack.Screen name="login" />
-          <Stack.Screen name="cadastro" />
+          <Stack.Screen name="sign-in" />
+          <Stack.Screen name="sign-up" />
         </Stack.Protected>
       </Stack>
     </>

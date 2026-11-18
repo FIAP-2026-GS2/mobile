@@ -14,11 +14,11 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/spacing';
 import { EMAIL_PATTERN, hasErrors, type FieldErrors } from '@/utils/validation';
 
-type RegisterForm = { name: string; email: string; password: string; confirmPassword: string };
+type SignUpForm = { name: string; email: string; password: string; confirmPassword: string };
 
 const MIN_PASSWORD_LENGTH = 8;
 
-function validate(form: RegisterForm): FieldErrors<RegisterForm> {
+function validate(form: SignUpForm): FieldErrors<SignUpForm> {
   return {
     name: form.name.trim().length >= 3 ? undefined : 'Informe seu nome completo.',
     email: EMAIL_PATTERN.test(form.email.trim()) ? undefined : 'Informe um e-mail válido.',
@@ -30,20 +30,20 @@ function validate(form: RegisterForm): FieldErrors<RegisterForm> {
   };
 }
 
-export default function RegisterScreen() {
+export default function SignUpScreen() {
   const { colors } = useTheme();
   const { signUp } = useAuth();
-  const [form, setForm] = useState<RegisterForm>({
+  const [form, setForm] = useState<SignUpForm>({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
-  const [errors, setErrors] = useState<FieldErrors<RegisterForm>>({});
+  const [errors, setErrors] = useState<FieldErrors<SignUpForm>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function updateField(field: keyof RegisterForm, value: string) {
+  function updateField(field: keyof SignUpForm, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
@@ -130,7 +130,7 @@ export default function RegisterScreen() {
 
         <View style={styles.footer}>
           <AppText color="textSecondary">Já tem conta?</AppText>
-          <Link href="/login" replace>
+          <Link href="/sign-in" replace>
             <AppText variant="bodyStrong" color="primary">
               Entrar
             </AppText>

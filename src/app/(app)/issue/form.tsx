@@ -115,10 +115,10 @@ function IssueFormContent({ issueId, initialForm, issueTypes, points }: IssueFor
       const saved = await saveIssue.mutateAsync(input);
       if (isEditing) {
         notify('Relato atualizado', 'As alterações foram salvas.');
-        goBackOr('/ocorrencias');
+        goBackOr('/issues');
       } else {
         notify('Relato enviado', 'A zeladoria vai analisar seu relato.');
-        router.replace({ pathname: '/ocorrencia/[id]', params: { id: saved.id } });
+        router.replace({ pathname: '/issue/[id]', params: { id: saved.id } });
       }
     } catch (error) {
       const apiError = toApiError(error);

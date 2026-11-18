@@ -18,14 +18,14 @@ export default function AppLayout() {
         contentStyle: { backgroundColor: colors.background },
       }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="ocorrencia/[id]" options={{ title: 'Ocorrência' }} />
-      <Stack.Screen name="ocorrencia/formulario" options={{ title: 'Relatar problema' }} />
-      <Stack.Screen name="sobre" options={{ title: 'Sobre o app' }} />
+      <Stack.Screen name="issue/[id]" options={{ title: 'Ocorrência' }} />
+      <Stack.Screen name="issue/form" options={{ title: 'Relatar problema' }} />
+      <Stack.Screen name="about" options={{ title: 'Sobre o app' }} />
 
       {/* Telas exclusivas do gestor de zeladoria */}
       <Stack.Protected guard={isManager}>
-        <Stack.Screen name="deteccao/[id]" options={{ title: 'Detecção da IA' }} />
-        <Stack.Screen name="agenda/formulario" options={{ title: 'Agenda de captura' }} />
+        <Stack.Screen name="detection/[id]" options={{ title: 'Detecção da IA' }} />
+        <Stack.Screen name="schedule/form" options={{ title: 'Agenda de captura' }} />
       </Stack.Protected>
     </Stack>
   );

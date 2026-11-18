@@ -54,7 +54,7 @@ export default function IssuesScreen() {
         renderItem={({ item }) => (
           <IssueCard
             issue={item}
-            onPress={() => router.push({ pathname: '/ocorrencia/[id]', params: { id: item.id } })}
+            onPress={() => router.push({ pathname: '/issue/[id]', params: { id: item.id } })}
           />
         )}
         onEndReachedThreshold={0.4}
@@ -95,7 +95,7 @@ export default function IssuesScreen() {
         <FloatingButton
           icon="add"
           accessibilityLabel="Relatar um problema"
-          onPress={() => router.push('/ocorrencia/formulario')}
+          onPress={() => router.push('/issue/form')}
         />
       ) : null}
     </View>

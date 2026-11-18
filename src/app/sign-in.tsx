@@ -14,20 +14,20 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/spacing';
 import { EMAIL_PATTERN, hasErrors, type FieldErrors } from '@/utils/validation';
 
-type LoginForm = { email: string; password: string };
+type SignInForm = { email: string; password: string };
 
-function validate(form: LoginForm): FieldErrors<LoginForm> {
+function validate(form: SignInForm): FieldErrors<SignInForm> {
   return {
     email: EMAIL_PATTERN.test(form.email.trim()) ? undefined : 'Informe um e-mail válido.',
     password: form.password ? undefined : 'Informe sua senha.',
   };
 }
 
-export default function LoginScreen() {
+export default function SignInScreen() {
   const { colors } = useTheme();
   const { signIn } = useAuth();
-  const [form, setForm] = useState<LoginForm>({ email: '', password: '' });
-  const [errors, setErrors] = useState<FieldErrors<LoginForm>>({});
+  const [form, setForm] = useState<SignInForm>({ email: '', password: '' });
+  const [errors, setErrors] = useState<FieldErrors<SignInForm>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -93,7 +93,7 @@ export default function LoginScreen() {
 
         <View style={styles.footer}>
           <AppText color="textSecondary">Ainda não tem conta?</AppText>
-          <Link href="/cadastro" replace>
+          <Link href="/sign-up" replace>
             <AppText variant="bodyStrong" color="primary">
               Criar conta
             </AppText>

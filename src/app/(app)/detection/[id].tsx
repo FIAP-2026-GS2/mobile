@@ -40,7 +40,7 @@ export default function DetectionDetailScreen() {
     try {
       const issue = await confirmDetection.mutateAsync(detectionId);
       notify('Ocorrência aberta', 'A equipe responsável já pode atender.');
-      router.replace({ pathname: '/ocorrencia/[id]', params: { id: issue.id } });
+      router.replace({ pathname: '/issue/[id]', params: { id: issue.id } });
     } catch (error) {
       notify('Não foi possível confirmar', getErrorMessage(error));
     }
@@ -55,7 +55,7 @@ export default function DetectionDetailScreen() {
     if (!confirmed) return;
     try {
       await dismissDetection.mutateAsync(detectionId);
-      goBackOr('/deteccoes');
+      goBackOr('/detections');
     } catch (error) {
       notify('Não foi possível descartar', getErrorMessage(error));
     }
@@ -140,7 +140,7 @@ export default function DetectionDetailScreen() {
           variant="secondary"
           onPress={() =>
             router.push({
-              pathname: '/ocorrencia/[id]',
+              pathname: '/issue/[id]',
               params: { id: data.issueReportId as number },
             })
           }

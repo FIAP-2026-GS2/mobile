@@ -69,7 +69,7 @@ export default function AccountScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/sobre')}
+        onPress={() => router.push('/about')}
         style={[styles.link, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Ionicons name="information-circle-outline" size={22} color={colors.primary} />
         <AppText variant="bodyStrong" style={styles.flex}>
