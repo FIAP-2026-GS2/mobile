@@ -80,7 +80,7 @@ export default function SignUpScreen() {
           <RadarLogo size={72} showName={false} />
           <AppText variant="title">Criar conta de cidadão</AppText>
           <AppText color="textSecondary" style={styles.center}>
-            Relate problemas e acompanhe o que as câmeras já encontraram no seu bairro.
+            Acompanhe o que as câmeras encontram no seu bairro e confira os consertos da prefeitura.
           </AppText>
         </View>
 
