@@ -6,7 +6,10 @@ export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ?? 'https://sampatech-portal.onrender.com';
 
 // Endereço da API .NET: ocorrências resolvidas e envio de fotos do cidadão (confirmar ou contestar).
-export const DOTNET_API_BASE_URL = process.env.EXPO_PUBLIC_DOTNET_API_URL ?? '';
+// Ela é publicada em HTTP no Azure; por isso o app.json libera esse tráfego no Android.
+export const DOTNET_API_BASE_URL =
+  process.env.EXPO_PUBLIC_DOTNET_API_URL ??
+  'http://sampatech-gs2devops.centralus.azurecontainer.io:8080';
 
 export const COMMIT_HASH: string | null = Constants.expoConfig?.extra?.commitHash ?? null;
 
