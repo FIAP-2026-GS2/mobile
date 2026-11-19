@@ -21,16 +21,18 @@ cidadão acompanha tudo por este aplicativo.
 
 ## Funcionalidades
 
-| Tela                  | O que faz                                                                      |
-| --------------------- | ------------------------------------------------------------------------------ |
-| Entrar / Criar conta  | Login e cadastro com JWT da API Java, validação dos campos e mensagens de erro |
-| Início                | Totais de ocorrências abertas, em atendimento e resolvidas, e as mais recentes |
-| Ocorrências           | Lista paginada com filtros por status, tipo de problema e bairro               |
-| Detalhe da ocorrência | Dados, linha do tempo do atendimento, abrir no mapa e perguntar ao assistente  |
-| Assistente            | Chat com IA (Spring AI) que responde com base nas ocorrências registradas      |
-| Conta                 | Perfil, tema claro/escuro, sair e excluir conta                                |
-| Editar perfil         | Troca de nome e senha                                                          |
-| Sobre o app           | Versão, plataforma e hash do commit da build publicada                         |
+| Tela                  | O que faz                                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Entrar / Criar conta  | Login e cadastro com JWT da API Java, validação dos campos e mensagens de erro                                                                   |
+| Início                | Totais de ocorrências abertas, em atendimento e resolvidas, e as mais recentes                                                                   |
+| Ocorrências           | Lista paginada com filtros por status, tipo de problema e bairro                                                                                 |
+| Detalhe da ocorrência | Dados, linha do tempo do atendimento, abrir no mapa e perguntar ao assistente                                                                    |
+| Conferir              | Ocorrências que a prefeitura marcou como resolvidas (API .NET), com quantos cidadãos já confirmaram ou contestaram                               |
+| Conferir conserto     | O cidadão tira uma foto no local e confirma o conserto ou contesta, contando o que continua errado; a IA borra rostos e placas e a equipe aprova |
+| Assistente            | Chat com IA (Spring AI) que responde com base nas ocorrências registradas                                                                        |
+| Conta                 | Perfil, tema claro/escuro, sair e excluir conta                                                                                                  |
+| Editar perfil         | Troca de nome e senha                                                                                                                            |
+| Sobre o app           | Versão, plataforma e hash do commit da build publicada                                                                                           |
 
 - **CRUD pela API Java**: o usuário cria a conta, consulta o perfil, edita nome e senha e exclui a conta.
 - **Rotas protegidas**: sem login, só as telas de entrar e criar conta existem (`Stack.Protected`).
@@ -53,9 +55,9 @@ cidadão acompanha tudo por este aplicativo.
 src/
   app/            rotas (cada arquivo é uma tela)
     (app)/        área logada
-      (tabs)/     abas: início, ocorrências, assistente, conta
+      (tabs)/     abas: início, ocorrências, conferir, assistente, conta
   api/            cliente Axios, erros e chamadas por recurso
-  components/     componentes de interface (ui/, issues/, assistant/)
+  components/     componentes de interface (ui/, issues/, citizenFeedback/, assistant/)
   context/        AuthProvider (sessão)
   hooks/          queries e mutations do TanStack Query
   storage/        armazenamento seguro do token e das preferências
@@ -86,6 +88,12 @@ servidor:
 
 ```bash
 EXPO_PUBLIC_API_URL=http://<ip-do-computador>:8080 npx expo start
+```
+
+A tela **Conferir** usa a API .NET. Informe o endereço dela antes de iniciar:
+
+```bash
+EXPO_PUBLIC_DOTNET_API_URL=https://<url-da-api-dotnet> npx expo start
 ```
 
 Verificações de qualidade:

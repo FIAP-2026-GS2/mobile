@@ -29,14 +29,21 @@ O **CRUD** exigido em Mobile é o do próprio usuário: criar (cadastro), ler (p
 - A API não envia cabeçalhos CORS, então a versão web do app não acessa a API direto do navegador.
   No Android e no iOS isso não se aplica.
 
-## API .NET (envio de fotos para confirmar ou contestar ocorrências)
+## API .NET (conferência do conserto com foto)
 
-Planejada, ainda não integrada. A API .NET hoje expõe rotas para a prefeitura e para o serviço de
-IA (login com usuários fixos `ADMIN`, `MANAGER`, `VIEWER` e `IA_SERVICE`) e a consulta pública
-`GET /api/public/issue-reports`, mas ainda não tem rota para o cidadão enviar uma foto, nem uma URL
-publicada. Para o app integrar, ela precisa de:
+- Endereço: defina `EXPO_PUBLIC_DOTNET_API_URL`.
+- Autenticação: o mesmo JWT emitido pela API Java. A .NET aceita dele só o papel `CITIZEN`; para
+  agentes e administradores o app avisa que só contas de cidadão enviam fotos.
+- A Java e a .NET têm bancos separados, então a lista da tela **Conferir** vem da própria .NET
+  (os ids das ocorrências não são os mesmos nas duas APIs).
 
-- uma rota que receba a foto (`multipart/form-data`) e a decisão `CONFIRM` ou `CONTEST` de uma
-  ocorrência;
-- uma forma de o cidadão se autenticar (aceitar o JWT emitido pela API Java ou um login próprio);
-- a URL do deploy no Azure.
+| Funcionalidade do app                            | Método e rota                                   | Arquivo                          |
+| ------------------------------------------------ | ----------------------------------------------- | -------------------------------- |
+| Ocorrências resolvidas para conferir (sem login) | `GET /api/public/issue-reports?status=RESOLVED` | `src/api/citizenFeedback.api.ts` |
+| Confirmar ou contestar o conserto com foto       | `POST /api/issue-reports/{id}/citizen-feedback` | `src/api/citizenFeedback.api.ts` |
+
+O envio é `multipart/form-data` com `decision` (`CONFIRM` ou `CONTEST`), `notes` (obrigatório para
+contestar), `latitude`, `longitude` e `photo` (JPEG tirado pela câmera, sem galeria), mais o
+cabeçalho `Idempotency-Key`. A IA da .NET borra rostos e placas e confere se a foto mostra o local;
+o relato fica `PENDING` até alguém da equipe aprovar. Confirmações e contestações aprovadas
+aparecem nos contadores da lista (`citizenConfirmations` e `citizenContests`).
