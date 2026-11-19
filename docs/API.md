@@ -43,7 +43,7 @@ O **CRUD** exigido em Mobile é o do próprio usuário: criar (cadastro), ler (p
 | Confirmar ou contestar o conserto com foto       | `POST /api/issue-reports/{id}/citizen-feedback` | `src/api/citizenFeedback.api.ts` |
 
 O envio é `multipart/form-data` com `decision` (`CONFIRM` ou `CONTEST`), `notes` (obrigatório para
-contestar), `latitude`, `longitude` e `photo` (JPEG tirado pela câmera, sem galeria), mais o
+contestar), `latitude`, `longitude` e `photo` (JPEG ou PNG, tirado na hora pela câmera ou escolhido da galeria do celular), mais o
 cabeçalho `Idempotency-Key`. A IA da .NET borra rostos e placas e confere se a foto mostra o local;
 o relato fica `PENDING` até alguém da equipe aprovar. Confirmações e contestações aprovadas
 aparecem nos contadores da lista (`citizenConfirmations` e `citizenContests`).
