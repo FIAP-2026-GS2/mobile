@@ -17,6 +17,7 @@ export default function AppLayout() {
       }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="issue/[id]" options={{ title: 'Ocorrência' }} />
+      <Stack.Screen name="verification/[id]" options={{ title: 'Conferir conserto' }} />
       <Stack.Screen name="profile/edit" options={{ title: 'Editar perfil' }} />
       <Stack.Screen name="about" options={{ title: 'Sobre o app' }} />
     </Stack>

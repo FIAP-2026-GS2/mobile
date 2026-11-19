@@ -72,6 +72,60 @@ export type UpdateProfileInput = {
   password?: string;
 };
 
+// ---- API .NET: conferência do conserto pelo cidadão ----
+
+// Ocorrência pública da API .NET (os ids não são os mesmos da API Java: são bancos separados)
+export type PublicIssueReport = {
+  id: number;
+  title: string;
+  description: string | null;
+  issueTypeName: string;
+  category: IssueCategory;
+  severity: Severity | null;
+  status: IssueStatus;
+  openingDate: string;
+  resolutionDate: string | null;
+  street: string | null;
+  neighborhood: string | null;
+  detectionCount: number;
+  lastSeenAt: string | null;
+  citizenConfirmations: number;
+  citizenContests: number;
+};
+
+export type CitizenFeedbackDecision = 'CONFIRM' | 'CONTEST';
+
+export type CitizenFeedbackStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export type CitizenFeedbackInput = {
+  decision: CitizenFeedbackDecision;
+  notes: string;
+  latitude: number;
+  longitude: number;
+  photoUri: string;
+};
+
+export type CitizenFeedback = {
+  id: number;
+  issueReportId: number;
+  decision: CitizenFeedbackDecision;
+  status: CitizenFeedbackStatus;
+  notes: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+  reviewNotes: string | null;
+  message: string;
+};
+
+// Página no formato da API .NET (a primeira página é a 1)
+export type DotnetPagedResponse<T> = {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
+
 // Página no formato PagedModel do Spring
 export type PagedResponse<T> = {
   content: T[];

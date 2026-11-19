@@ -29,6 +29,20 @@
       "expo-secure-store",
       "expo-font",
       [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Usamos a câmera para você fotografar o local e conferir se o conserto foi feito.",
+          "photosPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Usamos sua localização para confirmar que a foto foi tirada no local da ocorrência."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#0A0E1A",

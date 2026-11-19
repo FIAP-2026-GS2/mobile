@@ -1,9 +1,12 @@
 import Constants from 'expo-constants';
 
-// Endereço da API Java (Spring Boot). Para apontar para outro servidor, defina
-// EXPO_PUBLIC_API_URL (ex.: http://192.168.0.10:8080).
+// Endereço da API Java (Spring Boot): login, perfil, ocorrências do portal e assistente.
+// Para apontar para outro servidor, defina EXPO_PUBLIC_API_URL (ex.: http://192.168.0.10:8080).
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ?? 'https://sampatech-portal.onrender.com';
+
+// Endereço da API .NET: ocorrências resolvidas e envio de fotos do cidadão (confirmar ou contestar).
+export const DOTNET_API_BASE_URL = process.env.EXPO_PUBLIC_DOTNET_API_URL ?? '';
 
 export const COMMIT_HASH: string | null = Constants.expoConfig?.extra?.commitHash ?? null;
 

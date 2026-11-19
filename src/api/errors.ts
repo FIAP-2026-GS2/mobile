@@ -51,6 +51,8 @@ const STATUS_MESSAGES: Record<number, string> = {
   403: 'Você não tem permissão para esta ação.',
   404: 'Registro não encontrado.',
   409: 'Este registro já existe.',
+  413: 'A foto é grande demais. Tire outra e tente de novo.',
+  422: 'Não foi possível aceitar o envio. Confira e tente de novo.',
   429: 'Muitas tentativas em pouco tempo. Aguarde alguns segundos e tente de novo.',
 };
 

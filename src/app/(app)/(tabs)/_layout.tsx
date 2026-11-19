@@ -40,6 +40,10 @@ export default function TabsLayout() {
         options={{ title: 'Ocorrências', tabBarIcon: tabIcon('warning-outline') }}
       />
       <Tabs.Screen
+        name="verify"
+        options={{ title: 'Conferir', tabBarIcon: tabIcon('camera-outline') }}
+      />
+      <Tabs.Screen
         name="assistant"
         options={{ title: 'Assistente', tabBarIcon: tabIcon('sparkles-outline') }}
       />
