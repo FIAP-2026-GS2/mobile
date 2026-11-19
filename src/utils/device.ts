@@ -1,23 +1,51 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 
+import type { PhotoFile } from '@/types/domain';
+
 export class DevicePermissionError extends Error {}
 
-// Só câmera, sem galeria: a foto precisa ser tirada agora, no local (como no Smart Sampa Cidadão)
-export async function takePhoto(): Promise<string | null> {
+export type PhotoSource = 'camera' | 'library';
+
+// Limite da API .NET para a foto do cidadão
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+const pickerOptions: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ['images'],
+  // Qualidade reduzida mantém a foto bem abaixo do limite de 5 MB da API
+  quality: 0.6,
+};
+
+async function openCamera() {
   const permission = await ImagePicker.requestCameraPermissionsAsync();
   if (!permission.granted) {
     throw new DevicePermissionError(
       'Permita o uso da câmera nas configurações do celular para fotografar o local.',
     );
   }
+  return ImagePicker.launchCameraAsync(pickerOptions);
+}
 
-  const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ['images'],
-    // Qualidade reduzida mantém a foto bem abaixo do limite de 5 MB da API
-    quality: 0.6,
-  });
-  return result.canceled ? null : result.assets[0].uri;
+async function openLibrary() {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) {
+    throw new DevicePermissionError(
+      'Permita o acesso às fotos nas configurações do celular para escolher uma imagem.',
+    );
+  }
+  return ImagePicker.launchImageLibraryAsync(pickerOptions);
+}
+
+// Câmera (foto tirada agora, no local) ou uma foto já salva no aparelho
+export async function pickPhoto(source: PhotoSource): Promise<PhotoFile | null> {
+  const result = source === 'camera' ? await openCamera() : await openLibrary();
+  if (result.canceled) return null;
+
+  const asset = result.assets[0];
+  if (asset.fileSize && asset.fileSize > MAX_PHOTO_BYTES) {
+    throw new DevicePermissionError('A foto passa de 5 MB. Escolha ou tire outra.');
+  }
+  return { uri: asset.uri, mimeType: asset.mimeType ?? 'image/jpeg' };
 }
 
 export async function getCurrentCoordinates() {

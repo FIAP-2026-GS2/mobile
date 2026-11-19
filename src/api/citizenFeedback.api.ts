@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import type {
   CitizenFeedback,
   CitizenFeedbackInput,
+  PhotoFile,
   DotnetPagedResponse,
   PublicIssueReport,
 } from '@/types/domain';
@@ -26,16 +27,17 @@ export async function listResolvedIssues(page: number) {
   return data;
 }
 
-async function appendPhoto(form: FormData, photoUri: string) {
-  const name = `conferencia-${Date.now()}.jpg`;
+async function appendPhoto(form: FormData, photo: PhotoFile) {
+  const extension = photo.mimeType === 'image/png' ? 'png' : 'jpg';
+  const name = `conferencia-${Date.now()}.${extension}`;
   if (Platform.OS === 'web') {
     // No navegador a foto vem como blob: precisa virar arquivo de verdade
-    const blob = await (await fetch(photoUri)).blob();
+    const blob = await (await fetch(photo.uri)).blob();
     form.append('photo', blob, name);
     return;
   }
   // No Android e no iOS o React Native lê o arquivo direto pelo caminho
-  form.append('photo', { uri: photoUri, name, type: 'image/jpeg' } as unknown as Blob);
+  form.append('photo', { uri: photo.uri, name, type: photo.mimeType } as unknown as Blob);
 }
 
 // Envia a foto (multipart). A IA da .NET borra rostos e placas e confere se a foto mostra a rua
@@ -45,12 +47,13 @@ export async function submitCitizenFeedback(issueId: number, input: CitizenFeedb
   if (input.notes) form.append('notes', input.notes);
   form.append('latitude', input.latitude.toFixed(6));
   form.append('longitude', input.longitude.toFixed(6));
-  await appendPhoto(form, input.photoUri);
+  await appendPhoto(form, input.photo);
 
   const { data } = await dotnetClient.post<CitizenFeedback>(
     `/api/issue-reports/${issueId}/citizen-feedback`,
     form,
-    { headers: { 'Content-Type': 'multipart/form-data' } },
+    // A IA da .NET leva de 5 a 40 s para conferir a foto (e a .NET espera por ela até 60 s)
+    { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 90000 },
   );
   return data;
 }

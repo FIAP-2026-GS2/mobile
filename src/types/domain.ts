@@ -97,12 +97,17 @@ export type CitizenFeedbackDecision = 'CONFIRM' | 'CONTEST';
 
 export type CitizenFeedbackStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
+export type PhotoFile = {
+  uri: string;
+  mimeType: string;
+};
+
 export type CitizenFeedbackInput = {
   decision: CitizenFeedbackDecision;
   notes: string;
   latitude: number;
   longitude: number;
-  photoUri: string;
+  photo: PhotoFile;
 };
 
 export type CitizenFeedback = {

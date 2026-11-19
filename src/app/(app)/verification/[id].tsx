@@ -18,8 +18,13 @@ import { useAuth } from '@/context/AuthProvider';
 import { useResolvedIssue, useSubmitCitizenFeedback } from '@/hooks/useCitizenFeedback';
 import { useTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/spacing';
-import type { CitizenFeedback, CitizenFeedbackDecision } from '@/types/domain';
-import { DevicePermissionError, getCurrentCoordinates, takePhoto } from '@/utils/device';
+import type { CitizenFeedback, CitizenFeedbackDecision, PhotoFile } from '@/types/domain';
+import {
+  DevicePermissionError,
+  getCurrentCoordinates,
+  pickPhoto,
+  type PhotoSource,
+} from '@/utils/device';
 import { formatDateTime, formatLocation } from '@/utils/format';
 import { goBackOr } from '@/utils/navigation';
 import { hasErrors, type FieldErrors } from '@/utils/validation';
@@ -28,14 +33,14 @@ const MAX_NOTES_LENGTH = 500;
 
 type VerificationForm = {
   decision: CitizenFeedbackDecision | null;
-  photoUri: string | null;
+  photo: PhotoFile | null;
   notes: string;
 };
 
 function validate(form: VerificationForm): FieldErrors<VerificationForm> {
   return {
     decision: form.decision ? undefined : 'Escolha se o problema foi resolvido ou não.',
-    photoUri: form.photoUri ? undefined : 'Tire uma foto do local.',
+    photo: form.photo ? undefined : 'Tire ou escolha uma foto do local.',
     notes:
       form.decision === 'CONTEST' && !form.notes.trim()
         ? 'Conte o que continua errado no local.'
@@ -51,7 +56,7 @@ export default function VerificationScreen() {
   const resolvedIssue = useResolvedIssue(issueId);
   const submitFeedback = useSubmitCitizenFeedback(issueId);
 
-  const [form, setForm] = useState<VerificationForm>({ decision: null, photoUri: null, notes: '' });
+  const [form, setForm] = useState<VerificationForm>({ decision: null, photo: null, notes: '' });
   const [errors, setErrors] = useState<FieldErrors<VerificationForm>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -74,20 +79,20 @@ export default function VerificationScreen() {
     );
   }
 
-  async function handleTakePhoto() {
+  async function handlePickPhoto(source: PhotoSource) {
     try {
-      const photoUri = await takePhoto();
-      if (photoUri) {
-        setForm((current) => ({ ...current, photoUri }));
-        setErrors((current) => ({ ...current, photoUri: undefined }));
+      const photo = await pickPhoto(source);
+      if (photo) {
+        setForm((current) => ({ ...current, photo }));
+        setErrors((current) => ({ ...current, photo: undefined }));
       }
     } catch (error) {
       setErrors((current) => ({
         ...current,
-        photoUri:
+        photo:
           error instanceof DevicePermissionError
             ? error.message
-            : 'Não foi possível abrir a câmera.',
+            : 'Não foi possível abrir a câmera ou a galeria.',
       }));
     }
   }
@@ -106,7 +111,7 @@ export default function VerificationScreen() {
       const feedback = await submitFeedback.mutateAsync({
         decision: form.decision as CitizenFeedbackDecision,
         notes: form.notes.trim(),
-        photoUri: form.photoUri as string,
+        photo: form.photo as PhotoFile,
         ...coordinates,
       });
       setSentFeedback(feedback);
@@ -202,7 +207,11 @@ export default function VerificationScreen() {
         ) : null}
       </View>
 
-      <PhotoField photoUri={form.photoUri} error={errors.photoUri} onTakePhoto={handleTakePhoto} />
+      <PhotoField
+        photoUri={form.photo?.uri ?? null}
+        error={errors.photo}
+        onPickPhoto={handlePickPhoto}
+      />
 
       <TextField
         label={form.decision === 'CONTEST' ? 'O que continua errado?' : 'Observação (opcional)'}
@@ -232,7 +241,9 @@ export default function VerificationScreen() {
         disabled={!isCitizen}
       />
       <AppText variant="caption" color="textMuted" style={styles.center}>
-        A IA confere se a foto mostra o local e uma pessoa da equipe aprova o relato.
+        {submitFeedback.isPending
+          ? 'A IA está conferindo a foto. Isso pode levar até 40 segundos.'
+          : 'A IA confere se a foto mostra o local e uma pessoa da equipe aprova o relato.'}
       </AppText>
     </ScreenContainer>
   );

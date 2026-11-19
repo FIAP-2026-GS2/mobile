@@ -1,17 +1,19 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
+import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, spacing } from '@/theme/spacing';
+import type { PhotoSource } from '@/utils/device';
 
 type PhotoFieldProps = {
   photoUri: string | null;
   error?: string;
-  onTakePhoto: () => void;
+  onPickPhoto: (source: PhotoSource) => void;
 };
 
-export function PhotoField({ photoUri, error, onTakePhoto }: PhotoFieldProps) {
+export function PhotoField({ photoUri, error, onPickPhoto }: PhotoFieldProps) {
   const { colors } = useTheme();
 
   return (
@@ -19,10 +21,7 @@ export function PhotoField({ photoUri, error, onTakePhoto }: PhotoFieldProps) {
       <AppText variant="caption" color="textSecondary">
         Foto do local
       </AppText>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={photoUri ? 'Tirar outra foto' : 'Tirar foto do local'}
-        onPress={onTakePhoto}
+      <View
         style={[
           styles.frame,
           {
@@ -34,25 +33,36 @@ export function PhotoField({ photoUri, error, onTakePhoto }: PhotoFieldProps) {
           <Image
             source={{ uri: photoUri }}
             style={styles.preview}
-            accessibilityLabel="Foto tirada do local"
+            accessibilityLabel="Foto escolhida do local"
           />
         ) : (
           <View style={styles.placeholder}>
-            <Ionicons name="camera-outline" size={40} color={colors.primary} />
-            <AppText variant="bodyStrong" color="primary">
-              Tirar foto
-            </AppText>
+            <Ionicons name="image-outline" size={40} color={colors.primary} />
             <AppText variant="caption" color="textMuted" style={styles.center}>
               Mostre o local por inteiro. Rostos e placas são borrados automaticamente.
             </AppText>
           </View>
         )}
-      </Pressable>
-      {photoUri ? (
-        <AppText variant="caption" color="primary" onPress={onTakePhoto}>
-          Tirar outra foto
-        </AppText>
-      ) : null}
+      </View>
+      <View style={styles.actions}>
+        <View style={styles.action}>
+          <Button
+            title={photoUri ? 'Tirar outra' : 'Tirar foto'}
+            icon="camera-outline"
+            variant="secondary"
+            onPress={() => onPickPhoto('camera')}
+          />
+        </View>
+        <View style={styles.action}>
+          <Button
+            title="Galeria"
+            icon="images-outline"
+            variant="secondary"
+            onPress={() => onPickPhoto('library')}
+            accessibilityHint="Escolhe uma foto já salva no celular"
+          />
+        </View>
+      </View>
       {error ? (
         <AppText variant="caption" color="danger">
           {error}
@@ -64,7 +74,7 @@ export function PhotoField({ photoUri, error, onTakePhoto }: PhotoFieldProps) {
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   frame: {
     borderWidth: 1.5,
@@ -86,5 +96,12 @@ const styles = StyleSheet.create({
   },
   center: {
     textAlign: 'center',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  action: {
+    flex: 1,
   },
 });

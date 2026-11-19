@@ -32,7 +32,7 @@
         "expo-image-picker",
         {
           "cameraPermission": "Usamos a câmera para você fotografar o local e conferir se o conserto foi feito.",
-          "photosPermission": false,
+          "photosPermission": "Usamos suas fotos para você enviar uma imagem já salva do local da ocorrência.",
           "microphonePermission": false
         }
       ],
