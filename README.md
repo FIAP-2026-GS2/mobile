@@ -117,7 +117,7 @@ O app é distribuído pelo **Firebase App Distribution** (APK gerado com EAS Bui
 
 ## Vídeo de apresentação
 
-_Link do YouTube será adicionado aqui._
+[Assista no YouTube](https://www.youtube.com/watch?v=bowNBvTeWXc)
 
 ## Equipe
 
