@@ -31,7 +31,7 @@ O **CRUD** exigido em Mobile é o do próprio usuário: criar (cadastro), ler (p
 
 ## API .NET (conferência do conserto com foto)
 
-- Produção: `http://sampatech-mobile-gs2devops.centralus.azurecontainer.io:8080` (Swagger em `/swagger`). Como é HTTP, o `app.json` libera esse tráfego no Android (`expo-build-properties`). Outro servidor: defina `EXPO_PUBLIC_DOTNET_API_URL`.
+- Produção: `http://sampatech-api-gs2jd.canadacentral.azurecontainer.io:8080` (Swagger em `/swagger`). Como é HTTP, o `app.json` libera esse tráfego no Android (`expo-build-properties`). Outro servidor: defina `EXPO_PUBLIC_DOTNET_API_URL`.
 - Autenticação: o mesmo JWT emitido pela API Java. A .NET aceita dele só o papel `CITIZEN`; para
   agentes e administradores o app avisa que só contas de cidadão enviam fotos.
 - A Java e a .NET têm bancos separados, então a lista da tela **Conferir** vem da própria .NET

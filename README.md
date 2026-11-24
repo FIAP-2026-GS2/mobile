@@ -90,7 +90,7 @@ servidor:
 EXPO_PUBLIC_API_URL=http://<ip-do-computador>:8080 npx expo start
 ```
 
-A tela **Conferir** usa a API .NET publicada em `http://sampatech-mobile-gs2devops.centralus.azurecontainer.io:8080`. Para apontar para outro servidor:
+A tela **Conferir** usa a API .NET publicada em `http://sampatech-api-gs2jd.canadacentral.azurecontainer.io:8080`. Para apontar para outro servidor:
 
 ```bash
 EXPO_PUBLIC_DOTNET_API_URL=https://<url-da-api-dotnet> npx expo start
